@@ -9,151 +9,245 @@ from dataclasses import dataclass
 # Each cell in the grid represented by a node
 @dataclass
 class Node:
-    color: str = "W"
-    parent: tuple = (0, 0)
-    g: int = sys.maxsize  # Cost var
-    h: int = 0  # Heuristic var
-    f: int = 0  # Combined g + h
+	color: str = "W"
+	parent: tuple = (0, 0)
+	g: int = sys.maxsize  # Cost var
+	h: int = 0  # Heuristic var
+	f: int = 0  # Combined g + h
 
 
 class Search:
-    def __init__(self, object, rows, cols, start, goal):
-        self.gridQ = object
-        self.goalFound = False
-        self.rows = rows
-        self.cols = cols
-        self.start = start
-        self.goal = goal
-        self.matrix = [[Node() for i in range(rows)] for j in range(cols)]
+	def __init__(self, object, rows, cols, start, goal):
+		self.gridQ = object
+		self.goalFound = False
+		self.rows = rows
+		self.cols = cols
+		self.start = start
+		self.goal = goal
+		self.matrix = [[Node() for i in range(rows)] for j in range(cols)]
 
-    def setCell(self, x, y, color):
-        """Sets cell to a wall in matrix"""
-        self.matrix[x][y].g = sys.maxsize
-        self.matrix[x][y].color = color
+	def setCell(self, x, y, color):
+		"""Sets cell to a wall in matrix"""
+		self.matrix[x][y].g = sys.maxsize
+		self.matrix[x][y].color = color
 
-    def in_bounds(self, cur):
-        """Check if cell is within bounds of grid and isn't a wall"""
-        i, j = cur
-        if 0 <= i < self.rows and 0 <= j < self.cols:
-            return True
-        else:
-            return False
+	def in_bounds(self, cur):
+		"""Check if cell is within bounds of grid and isn't a wall"""
+		i, j = cur
+		if 0 <= i < self.rows and 0 <= j < self.cols:
+			return True
+		else:
+			return False
 
-    def get_neighbors(self, cur, directions):
-        """Returns visitable neighbors as a list"""
-        i, j = cur
-        if directions == 8:
-            #fmt: off
-            adj = [(i-1, j), (i-1, j+1), (i, j + 1), (i + 1, j + 1), (i+1, j), (i+1, j-1), (i, j-1), (i-1, j-1),]
-        elif directions == 4:
-            adj = [(i, j + 1), (i + 1, j), (i, j - 1), (i - 1, j)]
+	def get_neighbors(self, cur, directions):
+		"""Returns visitable neighbors as a list"""
+		i, j = cur
+		if directions == 8:
+			#fmt: off
+			adj = [(i-1, j), (i-1, j+1), (i, j + 1), (i + 1, j + 1), (i+1, j), (i+1, j-1), (i, j-1), (i-1, j-1),]
+		elif directions == 4:
+			adj = [(i, j + 1), (i + 1, j), (i, j - 1), (i - 1, j)]
 
-        adj = filter(self.in_bounds, adj)
-        return adj
+		adj = filter(self.in_bounds, adj)
+		return adj
 
-    def get_cost(self, cur, to):
-        """Returns cost from one cell to another. Different values for diagonal or straight movement"""
-        i1, j1 = cur
-        i2, j2 = to
-        if abs(i1 - i2) + (j1 - j2) == 1:
-            return 1
-        else:
-            return 1.414
+	def get_cost(self, cur, to):
+		"""Returns cost from one cell to another. Different values for diagonal or straight movement"""
+		i1, j1 = cur
+		i2, j2 = to
+		if abs(i1 - i2) + (j1 - j2) == 1:
+			return 1
+		else:
+			return 1.414
 
-    def bfs(self):
-        # Initialize parents of each cell to itself
-        for i in range(len(self.matrix)):
-            for j in range(len(self.matrix[i])):
-                self.matrix[i][j].parent = (i, j)
+	def bfs(self):
+		# Initialize parents of each cell to itself
+		for i in range(len(self.matrix)):
+			for j in range(len(self.matrix[i])):
+				self.matrix[i][j].parent = (i, j)
 
-        # Declare new queue to determine which direction to travel
-        bfsQ = queue.Queue()
-        bfsQ.put(self.start)
-        self.goalFound = False
+		# Declare new queue to determine which direction to travel
+		bfsQ = queue.Queue()
+		bfsQ.put(self.start)
+		self.goalFound = False
 
-        # Set start cell to visited. g member variable is being used as an indicator of visited
-        # or not visited
-        self.matrix[self.start[0]][self.start[1]].g = 0
+		# Set start cell to visited. g member variable is being used as an indicator of visited
+		# or not visited
+		self.matrix[self.start[0]][self.start[1]].g = 0
 
-        while not bfsQ.empty():
-            cur = bfsQ.get()
+		while not bfsQ.empty():
+			cur = bfsQ.get()
 
-            if cur == self.goal:
-                break
+			if cur == self.goal:
+				break
 
-            for v in self.get_neighbors(cur, 4):
-                i, j = v
+			for v in self.get_neighbors(cur, 8):
+				i, j = v
 
-                if self.matrix[i][j].color == 'B':
-                    continue
+				if self.matrix[i][j].color == 'B':
+					continue
 
-                # If g is still maxsize, it hasn't been visited so add this cell to the queue
-                if self.matrix[i][j].g == sys.maxsize:
-                    bfsQ.put(v)
-                    self.matrix[i][j].g = self.matrix[cur[0]][cur[1]].g + 1
-                    self.matrix[i][j].parent = cur
-                    self.gridQ.put((v[0], v[1], config.green))
-                else:
-                    self.gridQ.put((v[0], v[1], config.red))
+				# If g is still maxsize, it hasn't been visited so add this cell to the queue
+				if self.matrix[i][j].g == sys.maxsize:
+					bfsQ.put(v)
+					self.matrix[i][j].g = self.matrix[cur[0]][cur[1]].g + 1
+					self.matrix[i][j].parent = cur
+					self.gridQ.put((v[0], v[1], config.green))
+				else:
+					self.gridQ.put((v[0], v[1], config.red))
 
-        # Print out path taken to find the goal
-        self.backtrack(self.goal)
+		# Print out path taken to find the goal
+		self.backtrack(self.goal)
 
-    def dfs(self):
+	def dfs(self):
 
-        # New stack to search via depth first. Start with start node
-        dfsStack = queue.LifoQueue()
-        dfsStack.put(self.start)
-        self.goalFound = False
+		# New stack to search via depth first. Start with start node
+		dfsStack = queue.LifoQueue()
+		dfsStack.put(self.start)
+		self.goalFound = False
 
-        # While there are still nodes to process and the goal hasn't been found do
-        while not dfsStack.empty() and self.goalFound == False:
-            i, j = dfsStack.get()
+		# While there are still nodes to process and the goal hasn't been found do
+		while not dfsStack.empty() and self.goalFound == False:
+			i, j = dfsStack.get()
 
-            # Skip cells that are walls
-            if self.matrix[i][j].color == "B":
-                continue
+			# Skip cells that are walls
+			if self.matrix[i][j].color == "B":
+				continue
 
-            # Set color to processing for entry node
-            self.matrix[i][j].color = "G"
-            self.gridQ.put((i, j, config.green))
+			# Set color to processing for entry node
+			self.matrix[i][j].color = "G"
+			self.gridQ.put((i, j, config.green))
 
-            # Look at each neighbor of current cell
-            for v in self.get_neighbors((i, j), 4):
-                row = v[0]
-                col = v[1]
+			# Look at each neighbor of current cell
+			for v in self.get_neighbors((i, j), 8):
+				row = v[0]
+				col = v[1]
 
-                # Only add nodes to the stack that haven't been visited yet
-                if self.matrix[row][col].color == "W":
-                    self.matrix[row][col].parent = (i, j)
-                    dfsStack.put((row, col))
+				# Only add nodes to the stack that haven't been visited yet
+				if self.matrix[row][col].color == "W":
+					self.matrix[row][col].parent = (i, j)
+					dfsStack.put((row, col))
 
-                    # Exit early if goal has been found
-                    if (row, col) == self.goal:
-                        self.goalFound = True
-                        break
+					# Exit early if goal has been found
+					if (row, col) == self.goal:
+						self.goalFound = True
+						break
 
-        self.backtrack(self.goal)
+		self.backtrack(self.goal)
 
-    # TODO: Implement Dijkstra algorithm
-    def dijkstra(self):
-        pass
+	def dijkstra(self):
+		# Initialize parents of each cell to itself
+		for i in range(len(self.matrix)):
+			for j in range(len(self.matrix[i])):
+				self.matrix[i][j].parent = (i, j)
+		
+		# Initialize Priority Queue
+		hq = []
+		heapq.heappush(hq, [0, self.start])
+		self.goalFound = False
 
-    # TODO: Implement A* algorithm
-    def a_star(self):
-        pass
+		# Set Dist of Start to 0 
+		self.matrix[self.start[0]][self.start[1]].g = 0
 
-    def heuristic(self, cur, goal):
-        # Heuristic for 8-directional diagonal movements
-        non_diag = 1
-        diag = 1.414
-        dx = abs(cur[0] - goal[0])
-        dy = abs(cur[1] - goal[1])
-        return min(dx, dy) * diag + abs(dx - dy)
+		while hq and self.goalFound == False:
+			cost, cur = heapq.heappop(hq)
 
-    def backtrack(self, cur):
-        self.gridQ.put((cur[0], cur[1], config.yellow))
-        while cur != self.start:
-            cur = self.matrix[cur[0]][cur[1]].parent
-            self.gridQ.put((cur[0], cur[1], config.blue))
-        self.gridQ.put((cur[0], cur[1], config.yellow))
+			if cur == self.goal:
+				self.goalFound = True
+				break
+
+			# Skip cells that are walls
+			if self.matrix[cur[0]][cur[1]].color == "B":
+				continue
+
+			# Set color to processing for entry node
+			self.matrix[cur[0]][cur[1]].color = "G"
+			self.gridQ.put((cur[0], cur[1], config.green))
+
+			for v in self.get_neighbors(cur, 8):
+				i, j = v
+
+				if self.matrix[i][j].color == 'B':
+					continue
+
+				if self.matrix[i][j].color == 'W':
+					new_cost = self.matrix[cur[0]][cur[1]].g + self.get_cost(cur, v)
+
+					# If new_cost is smaller than current cost of v, update cost and its parent
+					if self.matrix[i][j].g > new_cost:
+						heapq.heappush(hq, [new_cost, v])
+						self.matrix[i][j].g = new_cost
+						self.matrix[i][j].parent = cur
+					
+					if cur == self.goal:
+						self.goalFound = True
+						break
+		
+		self.backtrack(self.goal)
+
+	def a_star(self):
+		# Initialize parents of each cell to itself
+		for i in range(len(self.matrix)):
+			for j in range(len(self.matrix[i])):
+				self.matrix[i][j].parent = (i, j)
+		
+		# Initialize Priority Queue
+		hq = []
+		heapq.heappush(hq, [0, self.start])
+		self.goalFound = False
+
+		# Set Dist of Start to 0 
+		self.matrix[self.start[0]][self.start[1]].g = 0
+
+		while hq and self.goalFound == False:
+			cost, cur = heapq.heappop(hq)
+
+			if cur == self.goal:
+				self.goalFound = True
+				break
+
+			# Skip cells that are walls
+			if self.matrix[cur[0]][cur[1]].color == "B":
+				continue
+
+			# Set color to processing for entry node
+			self.matrix[cur[0]][cur[1]].color = "G"
+			self.gridQ.put((cur[0], cur[1], config.green))
+
+			for v in self.get_neighbors(cur, 8):
+				i, j = v
+
+				if self.matrix[i][j].color == 'B':
+					continue
+
+				if self.matrix[i][j].color == 'W':
+					new_cost = self.matrix[cur[0]][cur[1]].g + self.get_cost(cur, v)
+
+					# If new_cost is smaller than current cost of v, update cost and its parent
+					if self.matrix[i][j].g > new_cost:
+						Priority = new_cost + self.heuristic(v, self.goal)
+						heapq.heappush(hq, [Priority, v])
+						self.matrix[i][j].g = new_cost
+						self.matrix[i][j].parent = cur
+					
+					if v == self.goal:
+						self.goalFound = True
+						break
+
+		
+		self.backtrack(self.goal)
+
+	def heuristic(self, cur, goal):
+		# Heuristic for 8-directional diagonal movements
+		non_diag = 1
+		diag = 1.414
+		dx = abs(cur[0] - goal[0])
+		dy = abs(cur[1] - goal[1])
+		return min(dx, dy) * diag + abs(dx - dy)
+
+	def backtrack(self, cur):
+		self.gridQ.put((cur[0], cur[1], config.yellow))
+		while cur != self.start:
+			cur = self.matrix[cur[0]][cur[1]].parent
+			self.gridQ.put((cur[0], cur[1], config.blue))
+		self.gridQ.put((cur[0], cur[1], config.yellow))
